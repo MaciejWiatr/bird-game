@@ -1,14 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="box" ></div>
-    <div id="debug-window"></div>
-    <script type="module" src="/main.js"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/313/dove_1f54a-fe0f.png"
+		/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Bird game</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<div class="title-screen">
+			<div class="title-screen__wrapper">
+				<h1>The Bird Game</h1>
+				<p>Created by: Maciej Wiatr</p>
+				<button id="start-button">Play</button>
+			</div>
+		</div>
+		<div class="end-screen disabled">
+			<div class="end-screen__wrapper">
+				<h1>Game over</h1>
+				<p>Thanks for playing</p>
+				<button id="end-button">Play again</button>
+			</div>
+		</div>
+
+		<script type="module" src="/main.js"></script>
+	</body>
 </html>

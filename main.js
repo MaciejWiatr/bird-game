@@ -3,20 +3,23 @@ import * as R from "ramda";
 import gsap from "gsap";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-import "./style.css";
+import "./style.scss";
 
-//configure threejs scene, renderer, camera, light and add cube to scene and render it to the screen
 const main = async function () {
+	let playing = false;
 	const scene = new THREE.Scene();
 	const camera = new THREE.PerspectiveCamera(
-		90,
+		80,
 		window.innerWidth / window.innerHeight,
 		0.1,
 		1000
 	);
 	camera.position.y = 3;
 	camera.rotateX(-0.1);
-
+	const startButton = document.querySelector("#start-button");
+	const endButton = document.querySelector("#end-button");
+	const titleScreen = document.querySelector(".title-screen");
+	const endScreen = document.querySelector(".end-screen");
 	const renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -203,11 +206,49 @@ const main = async function () {
 			})
 		);
 		head.castShadow = true;
-
 		head.position.y = 0.3;
 		head.position.z = -0.4;
 
 		brd.add(head);
+
+		const nose = new THREE.Mesh(
+			new THREE.BoxGeometry(0.2, 0.1, 0.2),
+			new THREE.MeshPhongMaterial({
+				color: 0xf59842,
+				shininess: 100,
+			})
+		);
+		nose.castShadow = true;
+		nose.position.y = 0.25;
+		nose.position.z = -0.9;
+
+		brd.add(nose);
+
+		const legL = new THREE.Mesh(
+			new THREE.BoxGeometry(0.1, 0.3, 0.1),
+			new THREE.MeshPhongMaterial({
+				color: 0xf2f7b2,
+				shininess: 100,
+			})
+		);
+
+		legL.position.y = -0.3;
+		legL.position.x = -0.15;
+
+		brd.add(legL);
+
+		const legR = new THREE.Mesh(
+			new THREE.BoxGeometry(0.1, 0.3, 0.1),
+			new THREE.MeshPhongMaterial({
+				color: 0xf2f7b2,
+				shininess: 100,
+			})
+		);
+
+		legR.position.y = -0.3;
+		legR.position.x = 0.15;
+
+		brd.add(legR);
 
 		function jump() {
 			const value = Math.abs((brd.rotation.z % Math.PI).toFixed(2));
@@ -270,11 +311,7 @@ const main = async function () {
 			// todo dont return if actively turning
 		}
 
-		function animate() {
-			gsap.to(wingL.rotation, { z: wingL.rotation.z + 10, duration: 1 });
-		}
-
-		return { group: brd, animate, jump, turn };
+		return { group: brd, jump, turn };
 	}
 
 	const bird = Bird();
@@ -289,53 +326,73 @@ const main = async function () {
 	scene.add(world);
 
 	document.addEventListener("keydown", (e) => {
-		if (e.keyCode === 38) {
-			bird.animate();
-		}
-		if (e.keyCode === 32) {
-			bird.jump();
-		}
-		if (e.keyCode === 37) {
-			bird.turn("left");
-		}
-		if (e.keyCode === 39) {
-			bird.turn("right");
+		if (playing) {
+			if (e.keyCode === 32) {
+				bird.jump();
+			}
+			if (e.keyCode === 37) {
+				bird.turn("left");
+			}
+			if (e.keyCode === 39) {
+				bird.turn("right");
+			}
 		}
 	});
 
+	const geometry = new THREE.CircleGeometry(1, 32);
+	const material = new THREE.MeshBasicMaterial({ color: 0x303030 });
+	const circle = new THREE.Mesh(geometry, material);
+	circle.position.y = 4.5;
+	circle.position.z = -0.5;
+	scene.add(circle);
+
+	const enterAnim = new gsap.timeline()
+		.from(
+			bird.group.rotation,
+			{
+				y: -Math.PI / 1.2,
+			},
+			0
+		)
+		.from(
+			bird.group.position,
+			{
+				y: 4.5,
+			},
+			0
+		)
+		.pause();
+
 	const animate = function () {
 		requestAnimationFrame(animate);
-		bird.group.position.y = R.clamp(-1.5, 10, bird.group.position.y - 0.01);
-		bird.group.rotation.x = R.clamp(-0.1, 10, bird.group.rotation.x - 0.01);
-		world.position.z = R.clamp(-999, 420, world.position.z + 0.3);
-		world.position.y = R.clamp(-70, 999, world.position.y - 0.01);
-		// world.position.z = 350;
-		// world.position.y = -60;
-		document.addEventListener("keydown", (e) => {
-			if (e.keyCode === 38) {
-				// bird.group.position.y += 0.0005;
-			}
-			if (e.keyCode === 40) {
-				bird.group.position.y -= 0.0001;
-			}
-			if (e.keyCode === 37) {
-				bird.group.position.x -= 0.0001;
-			}
-			if (e.keyCode === 39) {
-				bird.group.position.x += 0.0001;
-			}
-			if (e.keyCode === 87) {
-				bird.group.position.z += 0.0001;
-			}
-			if (e.keyCode === 83) {
-				bird.group.position.z -= 0.0001;
-			}
-		});
+		if (playing) {
+			enterAnim.play().then(() => {
+				scene.remove(circle);
+			});
+			bird.group.position.y = R.clamp(
+				-1.5,
+				10,
+				bird.group.position.y - 0.01
+			);
+			bird.group.rotation.x = R.clamp(
+				-0.1,
+				10,
+				bird.group.rotation.x - 0.01
+			);
+			world.position.z = R.clamp(-999, 420, world.position.z + 0.3);
+			world.position.y = R.clamp(-70, 999, world.position.y - 0.01);
+			if (world.position.z >= 420) end();
+		}
 
 		renderer.render(scene, camera);
 	};
 
 	window.addEventListener("resize", onWindowResize, false);
+
+	const end = () => {
+		playing = false;
+		endScreen.classList.remove("disabled");
+	};
 
 	function onWindowResize() {
 		camera.aspect = window.innerWidth / window.innerHeight;
@@ -343,6 +400,14 @@ const main = async function () {
 
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
+
+	startButton.addEventListener("click", () => {
+		playing = true;
+		titleScreen.classList.add("disabled");
+		endButton.addEventListener("click", () => {
+			window.location.reload();
+		});
+	});
 
 	animate();
 };

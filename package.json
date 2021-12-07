@@ -16,6 +16,7 @@
     "handsfree": "^8.5.1",
     "postprocessing": "^6.23.3",
     "ramda": "^0.27.1",
+    "sass": "^1.44.0",
     "three": "^0.135.0"
   }
 }

@@ -1,208 +1,350 @@
 import * as THREE from "three";
-import * as dat from "dat.gui";
 import * as R from "ramda";
 import gsap from "gsap";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-
-const gui = new dat.GUI();
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import "./style.css";
 
 //configure threejs scene, renderer, camera, light and add cube to scene and render it to the screen
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-	75,
-	window.innerWidth / window.innerHeight,
-	0.1,
-	1000
-);
-camera.position.y = 3;
-camera.rotateX(-0.1);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-const hemiLight = new THREE.HemisphereLight(0x0000ff, 0x00ff00, 2);
-const light = new THREE.PointLight(0xffffff, 1.5, 100);
-light.castShadow = true;
-light.shadow.camera.near = 0.1;
-light.shadow.camera.far = 100;
-light.position.set(-10, 10, 10);
-
-gui.add(light.position, "x", -10, 10);
-gui.add(light.position, "y", -10, 10);
-gui.add(light.position, "z", -10, 10);
-scene.add(light);
-scene.add(hemiLight);
-scene.background = new THREE.Color(0xc2f7ff);
-
-camera.position.z = 5;
-
-const loader = new THREE.TextureLoader();
-const height = loader.load("displace.jpg");
-let tree;
-
-const gltfLoader = new GLTFLoader();
-
-gltfLoader.load("tree.gltf", (gltf) => {
-	tree = gltf.scene;
-	scene.add(gltf.scene);
-});
-
-function World() {
-	const wrl = new THREE.Group();
-
-	const ground = new THREE.Mesh(
-		new THREE.PlaneGeometry(100, 900, 100, 100),
-		new THREE.MeshPhongMaterial({
-			color: 0x22d428,
-			displacementMap: height,
-			displacementScale: 2,
-		})
+const main = async function () {
+	const scene = new THREE.Scene();
+	const camera = new THREE.PerspectiveCamera(
+		90,
+		window.innerWidth / window.innerHeight,
+		0.1,
+		1000
 	);
-	ground.receiveShadow = true;
+	camera.position.y = 3;
+	camera.rotateX(-0.1);
 
-	wrl.add(ground);
+	const renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+	const hemiLight = new THREE.HemisphereLight(0xc1eef5, 2);
+	const light = new THREE.PointLight(0xffffff, 1.5, 100);
+	light.castShadow = true;
+	light.shadow.camera.near = 0.1;
+	light.shadow.camera.far = 100;
+	light.position.set(10, -4, 2);
+	scene.add(light);
+	scene.add(hemiLight);
+	scene.background = new THREE.Color(0xc2f7ff);
 
-	return wrl;
-}
+	camera.position.z = 5;
 
-function Bird() {
-	const brd = new THREE.Group();
+	const loader = new THREE.TextureLoader();
+	const height = loader.load("displace.png");
 
-	const body = new THREE.Mesh(
-		new THREE.BoxGeometry(0.5, 0.5, 1.25),
-		new THREE.MeshPhongMaterial({
-			color: 0xeeeeee,
-			shininess: 100,
-		})
-	);
-	body.castShadow = true;
+	const gltfLoader = new GLTFLoader();
+	const dracoLoader = new DRACOLoader();
+	dracoLoader.setDecoderPath("https://www.gstatic.com/draco/v1/decoders/");
+	gltfLoader.setDRACOLoader(dracoLoader);
+	const treeGltf = await gltfLoader.loadAsync("tree.gltf");
+	let tree = treeGltf.scene;
+	tree.scale.set(0.7, 0.7, 0.7);
 
-	brd.add(body);
+	const rocksGltf = await gltfLoader.loadAsync("rocks.gltf");
+	let rocks = rocksGltf.scene;
 
-	const wingL = new THREE.Mesh(
-		new THREE.BoxGeometry(1, 0.1, 0.75),
-		new THREE.MeshPhongMaterial({
-			color: 0xeeeeee,
-			shininess: 100,
-		})
-	);
-	wingL.castShadow = true;
+	const bigRock = await gltfLoader.loadAsync("bigRock.gltf");
+	let rockBig = bigRock.scene;
 
-	wingL.position.x = -0.5;
-	wingL.position.y = -0.15;
-	wingL.rotateZ(Math.PI / 8);
+	const plantGltf = await gltfLoader.loadAsync("plant.gltf");
+	let plant = plantGltf.scene;
 
-	brd.add(wingL);
+	const houseGltf = await gltfLoader.loadAsync("house.gltf");
+	let house = houseGltf.scene;
 
-	const wingR = new THREE.Mesh(
-		new THREE.BoxGeometry(1, 0.1, 0.75),
-		new THREE.MeshPhongMaterial({
-			color: 0xeeeeee,
-			shininess: 100,
-		})
-	);
-	wingR.castShadow = true;
+	function World() {
+		const wrl = new THREE.Group();
 
-	wingR.position.x = 0.5;
-	wingR.position.y = -0.15;
-	wingR.rotateZ(Math.PI / -8);
-	brd.add(wingR);
-
-	const head = new THREE.Mesh(
-		new THREE.BoxGeometry(0.4, 0.4, 0.7),
-		new THREE.MeshPhongMaterial({
-			color: 0xeeeeee,
-			shininess: 100,
-		})
-	);
-	head.castShadow = true;
-
-	head.position.y = 0.3;
-	head.position.z = -0.4;
-
-	brd.add(head);
-
-	function jump() {
-		gsap.to(brd.position, {
-			duration: 0.5,
-			y: brd.position.y + 1,
-		});
-		const tl = new gsap.timeline();
-		tl.to(wingL.rotation, { z: -0.1, duration: 0.1 }, 0).to(
-			wingL.rotation,
-			{
-				z: Math.PI / 4,
-				duration: 0.1,
-			}
+		const water = new THREE.Mesh(
+			new THREE.PlaneGeometry(1800, 1800, 100, 100),
+			new THREE.MeshPhongMaterial({
+				color: 0x80c3ed,
+				displacementMap: height,
+			})
 		);
-		const tl2 = new gsap.timeline();
-		tl2.to(wingR.rotation, { z: 0.1, duration: 0.1 }, 0).to(
-			wingR.rotation,
-			{
-				z: -(Math.PI / 4),
-				duration: 0.1,
-			}
+		water.receiveShadow = true;
+		water.rotation.x = -Math.PI / 2;
+		water.position.y = -1;
+		wrl.add(water);
+
+		const ground = new THREE.Mesh(
+			new THREE.PlaneGeometry(200, 900, 100, 100),
+			new THREE.MeshPhongMaterial({
+				color: 0x234a22,
+			})
 		);
+		ground.receiveShadow = true;
+		ground.rotation.x = -Math.PI / 2;
+		wrl.add(ground);
 
-		gsap.to(brd.rotation, { x: 0.2, duration: 0.1 });
+		for (let i = 0; i < 500; i++) {
+			let treeClone = tree.clone();
+			treeClone.receiveShadow = true;
+			treeClone.castShadow = true;
+			treeClone.position.x = Math.random() * 100 - 50;
+			treeClone.position.z = Math.random() * 900 - 450;
+			treeClone.rotateY = Math.random() * 360;
+			wrl.add(treeClone);
+		}
+
+		for (let i = 0; i < 500; i++) {
+			let rockClone = rocks.clone();
+			rockClone.scale.set(7, 7, 7);
+			rockClone.receiveShadow = true;
+			rockClone.castShadow = true;
+			rockClone.position.x = Math.random() * 100 - 50;
+			rockClone.position.z = Math.random() * 900 - 450;
+			wrl.add(rockClone);
+		}
+
+		for (let i = 0; i < 50; i++) {
+			let rockClone = rocks.clone();
+			rockClone.scale.set(50, 75, 50);
+			rockClone.receiveShadow = true;
+			rockClone.castShadow = true;
+			rockClone.position.x = -60;
+			rockClone.position.z = Math.random() * 900 - 450;
+			rockClone.rotateY = Math.random() * 360;
+			rockClone.position.y = Math.floor(Math.random() * 20) - 20;
+			wrl.add(rockClone);
+		}
+		for (let i = 0; i < 50; i++) {
+			let rockClone = rocks.clone();
+			rockClone.scale.set(50, 75, 50);
+			rockClone.receiveShadow = true;
+			rockClone.castShadow = true;
+			rockClone.position.x = 80;
+			rockClone.position.z = Math.random() * 900 - 450;
+			rockClone.rotateY = Math.random() * 360;
+			rockClone.position.y = Math.floor(Math.random() * 20) - 20;
+			wrl.add(rockClone);
+		}
+
+		for (let i = 0; i < 900; i++) {
+			let plantClone = plant.clone();
+			plantClone.scale.set(2, 2, 2);
+			plantClone.receiveShadow = true;
+			plantClone.castShadow = true;
+			plantClone.position.x = Math.random() * 100 - 50;
+			plantClone.position.z = Math.random() * 900 - 450;
+			wrl.add(plantClone);
+		}
+
+		rockBig.scale.set(200, 100, 100);
+		house.scale.set(10, 10, 10);
+		house.position.x = 0;
+		house.position.z = -425;
+		house.position.y = 64.5;
+
+		// houseMountain.add(house);
+
+		rockBig.position.set(-1050, -20, 400);
+		wrl.add(rockBig);
+		wrl.add(house);
+
+		wrl.receiveShadow = true;
+
+		return wrl;
 	}
 
-	function animate() {
-		gsap.to(wingL.rotation, { z: wingL.rotation.z + 10, duration: 1 });
+	function Bird() {
+		const brd = new THREE.Group();
+
+		const body = new THREE.Mesh(
+			new THREE.BoxGeometry(0.5, 0.5, 1.25),
+			new THREE.MeshPhongMaterial({
+				color: 0xeeeeee,
+				shininess: 100,
+			})
+		);
+		body.castShadow = true;
+
+		brd.add(body);
+
+		const wingL = new THREE.Mesh(
+			new THREE.BoxGeometry(1, 0.1, 0.75),
+			new THREE.MeshPhongMaterial({
+				color: 0xeeeeee,
+				shininess: 100,
+			})
+		);
+		wingL.castShadow = true;
+
+		wingL.position.x = -0.5;
+		wingL.position.y = -0.15;
+		wingL.rotateZ(Math.PI / 8);
+
+		brd.add(wingL);
+
+		const wingR = new THREE.Mesh(
+			new THREE.BoxGeometry(1, 0.1, 0.75),
+			new THREE.MeshPhongMaterial({
+				color: 0xeeeeee,
+				shininess: 100,
+			})
+		);
+		wingR.castShadow = true;
+
+		wingR.position.x = 0.5;
+		wingR.position.y = -0.15;
+		wingR.rotateZ(Math.PI / -8);
+		brd.add(wingR);
+
+		const head = new THREE.Mesh(
+			new THREE.BoxGeometry(0.4, 0.4, 0.7),
+			new THREE.MeshPhongMaterial({
+				color: 0xeeeeee,
+				shininess: 100,
+			})
+		);
+		head.castShadow = true;
+
+		head.position.y = 0.3;
+		head.position.z = -0.4;
+
+		brd.add(head);
+
+		function jump() {
+			const value = Math.abs((brd.rotation.z % Math.PI).toFixed(2));
+			const isRound = value === 3.14 || value === 0;
+
+			if (!isRound) {
+				gsap.to(brd.rotation, { z: 0, duration: 1 }).then(() => {
+					brd.rotation.z = 0;
+				});
+			}
+
+			gsap.to(brd.position, {
+				duration: 0.5,
+				y: brd.position.y + 1,
+			});
+			gsap.to(world.position, {
+				duration: 0.5,
+				y: world.position.y - 4,
+			});
+			const tl = new gsap.timeline();
+			tl.to(wingL.rotation, { z: -0.1, duration: 0.1 }, 0).to(
+				wingL.rotation,
+				{
+					z: Math.PI / 8,
+					duration: 0.1,
+				}
+			);
+			const tl2 = new gsap.timeline();
+			tl2.to(wingR.rotation, { z: 0.1, duration: 0.1 }, 0).to(
+				wingR.rotation,
+				{
+					z: -(Math.PI / 8),
+					duration: 0.1,
+				}
+			);
+
+			gsap.to(brd.rotation, { x: 0.5, duration: 0.1 });
+		}
+
+		function turn(dir) {
+			if (dir === "left") {
+				gsap.to(brd.rotation, {
+					z: brd.rotation.z + 2 * Math.PI,
+					duration: 1,
+				});
+				gsap.to(brd.position, {
+					x: brd.position.x - 1,
+					duration: 1,
+				});
+			} else {
+				gsap.to(brd.rotation, {
+					z: brd.rotation.z - 2 * Math.PI,
+					duration: 1,
+				});
+				gsap.to(brd.position, {
+					x: brd.position.x + 1,
+					duration: 1,
+				});
+			}
+			// todo dont return if actively turning
+		}
+
+		function animate() {
+			gsap.to(wingL.rotation, { z: wingL.rotation.z + 10, duration: 1 });
+		}
+
+		return { group: brd, animate, jump, turn };
 	}
 
-	return { group: brd, animate, jump };
-}
+	const bird = Bird();
+	bird.group.castShadow = true;
+	scene.add(bird.group);
 
-const bird = Bird();
-bird.group.castShadow = true;
-scene.add(bird.group);
+	const world = World();
+	world.receiveShadow = true;
 
-const world = World();
-world.receiveShadow = true;
-world.rotation.x = -Math.PI / 2;
-world.position.y = -5;
-scene.add(world);
-
-document.addEventListener("keydown", (e) => {
-	if (e.keyCode === 38) {
-		bird.animate();
-	}
-	if (e.keyCode === 32) {
-		bird.jump();
-	}
-});
-
-const animate = function () {
-	requestAnimationFrame(animate);
-	// bird.group.position.y -= 0.01;
-	bird.group.rotation.x = R.clamp(-0.1, 10, bird.group.rotation.x - 0.01);
+	world.position.z = -200;
+	world.position.y = -20;
+	scene.add(world);
 
 	document.addEventListener("keydown", (e) => {
 		if (e.keyCode === 38) {
-			// bird.group.position.y += 0.0005;
+			bird.animate();
 		}
-		if (e.keyCode === 40) {
-			bird.group.position.y -= 0.0001;
+		if (e.keyCode === 32) {
+			bird.jump();
 		}
 		if (e.keyCode === 37) {
-			bird.group.position.x -= 0.0001;
+			bird.turn("left");
 		}
 		if (e.keyCode === 39) {
-			bird.group.position.x += 0.0001;
-		}
-		if (e.keyCode === 87) {
-			bird.group.position.z += 0.0001;
-		}
-		if (e.keyCode === 83) {
-			bird.group.position.z -= 0.0001;
+			bird.turn("right");
 		}
 	});
 
-	renderer.render(scene, camera);
+	const animate = function () {
+		requestAnimationFrame(animate);
+		bird.group.position.y = R.clamp(-1.5, 10, bird.group.position.y - 0.01);
+		bird.group.rotation.x = R.clamp(-0.1, 10, bird.group.rotation.x - 0.01);
+		world.position.z = R.clamp(-999, 420, world.position.z + 0.3);
+		world.position.y = R.clamp(-70, 999, world.position.y - 0.01);
+		// world.position.z = 350;
+		// world.position.y = -60;
+		document.addEventListener("keydown", (e) => {
+			if (e.keyCode === 38) {
+				// bird.group.position.y += 0.0005;
+			}
+			if (e.keyCode === 40) {
+				bird.group.position.y -= 0.0001;
+			}
+			if (e.keyCode === 37) {
+				bird.group.position.x -= 0.0001;
+			}
+			if (e.keyCode === 39) {
+				bird.group.position.x += 0.0001;
+			}
+			if (e.keyCode === 87) {
+				bird.group.position.z += 0.0001;
+			}
+			if (e.keyCode === 83) {
+				bird.group.position.z -= 0.0001;
+			}
+		});
+
+		renderer.render(scene, camera);
+	};
+
+	window.addEventListener("resize", onWindowResize, false);
+
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize(window.innerWidth, window.innerHeight);
+	}
+
+	animate();
 };
 
-animate();
+main();

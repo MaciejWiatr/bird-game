@@ -199,6 +199,11 @@ postcss@^8.3.11:
     picocolors "^1.0.0"
     source-map-js "^1.0.1"
 
+postprocessing@^6.23.3:
+  version "6.23.3"
+  resolved "https://registry.yarnpkg.com/postprocessing/-/postprocessing-6.23.3.tgz#82766829d9c4bac184fceb0467c375a980dacc72"
+  integrity sha512-T/XCi+lsB1HWBen89wpumZJyxNX5LplyGATU2CPtSsJHr1Vz0lrzxKOAkuSUPZab13v4dB2ra5wUl+fpvwdLpA==
+
 ramda@^0.27.1:
   version "0.27.1"
   resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.27.1.tgz#66fc2df3ef873874ffc2da6aa8984658abacf5c9"

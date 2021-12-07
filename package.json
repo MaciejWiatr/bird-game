@@ -14,6 +14,7 @@
     "dat.gui": "^0.7.7",
     "gsap": "^3.8.0",
     "handsfree": "^8.5.1",
+    "postprocessing": "^6.23.3",
     "ramda": "^0.27.1",
     "three": "^0.135.0"
   }
